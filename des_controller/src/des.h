@@ -35,7 +35,7 @@ struct ctrl_response{ /* response structure from server, person included in resp
 	char errMsg[128]; /*error message */
 }typedef ctrl_resp_t;
 
-
+typedef void *(*FState)();
 
 #define NUM_STATES 15
 typedef enum /* all states possible in progra, */
@@ -44,7 +44,7 @@ typedef enum /* all states possible in progra, */
 	ST_READY = 1, 	/* 1: Ready state                */
 	ST_LS = 2,		/* 2: Left_Scan state            */
 	ST_RS = 3,		/* 3: Right_Scan state           */
-	ST_WS = 4,      /* 4: Weighed state              */
+	ST_WS = 4,     	/* 4: Weighted state             */
 	ST_LO = 5,		/* 5: Left_Open state            */
 	ST_RO = 6,		/* 6: Right_Open state           */
 	ST_LC = 7,		/* 7: Left_Close state           */
