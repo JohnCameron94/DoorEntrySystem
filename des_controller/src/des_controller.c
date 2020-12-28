@@ -30,7 +30,7 @@ void *st_exit(); /*  EXIT 				*/
  ****************************************/
 ctrl_resp_t controller_response; /* response structure */
 person_t person; /* person structure */
-//FState f_state = st_ready; /* Initially start at ready state  TODO pointer to function*/
+FState f_state = st_ready; /* Initially start at ready state  TODO pointer to function*/
 
 
 int main(int argc, char* argv[]) {
@@ -64,9 +64,178 @@ int main(int argc, char* argv[]) {
 				exit(EXIT_FAILURE);
 		}
 
-		//if(person.state == ST_EXIT)
-			//st_exit();
-
+		if(person.state == ST_EXIT)
+			st_exit();
+			
+		
+		/* which function to run? */
+		f_state = (FState)(*f_state)();
+		
+		controller_response.statusCode = EOK;
+		MsgReply(rcvid, EOK, &controller_response, sizeof(controller_response));
+		
+		if (person.state == ST_STOP)
+			break;
 	}
-
+	
+	ChannelDestroy(chid);
+	ConnectDetach(coid);
+	return EXIT_SUCCESS;
 }
+
+void *st_ready() {		/* READY STATE */
+	if (person.state == ST_LS) {		/* LEFT STATE */
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ls;
+	} else if (person.state == ST_RS) {	/* RIGHT STATE */
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_rs;
+	}
+	return st_ready;
+}
+
+void *st_ls() {		/* LEFT SCAN */
+	if (person.state == ST_GLU) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_glu;
+	}
+	return st_ls;
+}
+
+void *st_glu(){	 /*  GUARD LEFT UNLOCK	*/
+	if (person.state == ST_LO) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_lo;
+	}
+	return st_glu;
+}
+
+void *st_lo() {	 /*  LEFT OPEN  		*/
+	if (person.state == ST_WS) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ws;
+	}
+	return st_lo;
+}
+
+void *st_rs() {	 	/* RIGHT SCAN */
+	if (person.state == ST_GRU) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+	return st_gru;
+	}
+	return st_rs;
+}
+
+void *st_gru(){	 /*  GUARD RIGHT UNLOCK */
+	if (person.state == ST_RO) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ro;
+	}
+	return st_gru;
+}
+
+void *st_ro() {	 /*  RIGHT OPEN 		*/
+	if (person.state == ST_WS){
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ws;
+	}
+	return st_ro;
+}
+
+void *st_ws(){	 /*  WEIGHT SCALE 		*/
+	if (person.state == ST_LC) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_lc;
+	}
+	if (person.state == ST_RC) {
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_rc;
+	}
+	return st_ws;
+}
+
+void *st_lc() {	 /*  LEFT CLOSE 		*/
+	if (person.state == ST_GLL){
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_gll;
+	}
+	return st_lc;
+}
+
+void *st_rc() {	 /*  RIGHT CLOSE 		*/
+	if (person.state == ST_GRL){
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_grl;
+	}
+	return st_rc;
+}
+
+void *st_grl(){	 /*  GUARD RIGHT LOCK 	*/
+	if (person.state == ST_READY){
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ready;
+	}
+	return st_grl;
+}
+
+void *st_gll(){	 /*  GUARD LEFT LOCK 	*/
+	if (person.state == ST_READY){
+		if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+			printf("ERROR: Could not send message");
+			exit(EXIT_FAILURE);
+		}
+		return st_ready;
+	}
+	return st_gll;
+}
+
+void *st_exit(){  /*  EXIT */
+	person.state = ST_EXIT;
+	if (MsgSend(coid, &person, sizeof(person), &controller_response, sizeof(controller_response)) == -1){
+		printf("ERROR: Could not send message");
+		exit(EXIT_FAILURE);
+	}
+	person.state = ST_END;
+	return st_exit;
+}
+
+

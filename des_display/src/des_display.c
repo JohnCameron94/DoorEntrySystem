@@ -93,7 +93,7 @@ void display_current_state(person_t* person){
 		case ST_GLU:
 			printf("ST_GLU\n");
 			break;
-		case ST_EXIT: /* PRINT OUT STATE MESSAGE */
+		case ST_EXIT:
 			printf("%s \n", outMessage[OUT_EXIT_MSG]);
 			printf("%s \n",outMessage[OUT_STOP_MSG]);
 			break;
